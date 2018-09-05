@@ -17,12 +17,12 @@ const server = http.createServer( (req,res) => {
   // Figuring out the user:password URL details
   // ref: https://stackoverflow.com/questions/48196706/new-url-whatwg-url-api?noredirect=1
   // ref: https://github.com/JoshuaWise/request-target
-  // ref: curl localhost:3000/fubar/showMe.aspx?checkName=check#hash
-  // ref: curl NMCcoder:MySecretPassword@localhost:3000/fubar/showMe.aspx?checkName=check#hash
   // ref: https://stackoverflow.com/questions/5951552/basic-http-authentication-in-node-js
+  // test: curl "localhost:3000/fubar/showMe.aspx?checkName=check#hash"
+  // test: curl "http://EarlFlynn:SwashBuckler@localhost:3000/abc/xyz?foo=bar&snide=sarcastic&Blackfly=eAirRiffic#hash"
 
   // Check for authorization header content
-  function checkAuth() {
+  function buildUri() {
     if (req.headers && req.headers.authorization) {
       const header=req.headers.authorization;
       const token=header.split(/\s+/).pop()||'';
@@ -33,16 +33,18 @@ const server = http.createServer( (req,res) => {
       console.log(`Auth info:
         username: ${username}
         password: ${password}`);
-      return 'http://'+username+':'+password+'@'+req.headers.host;
+        return  `http://${username}:${password}@${req.headers.host}${req.url}`;
     }
     else {
-      return 'http://'+req.headers.host;
+      return `http://${req.headers.host}${req.url}`;
     }
   }
 
-  // Get the URL and parse it
-  const baseURL = checkAuth();
-  const parsedURL = new URL(req.url, baseURL);
+  // Get the URI
+  const uri = buildUri();
+
+  // Get the parsed URL
+  const parsedURL = new URL(req.url, uri);
 
   // Get the path from the URL
   const path = parsedURL.pathname + parsedURL.search;
@@ -50,18 +52,18 @@ const server = http.createServer( (req,res) => {
   // Send the response
   const parsedResponse = (`Hello, here are your request details:
 
-  url.hash......: ${parsedURL.hash}
-  url.host......: ${parsedURL.host}
-  url.hostname..: ${parsedURL.hostname}
-  url.href......: ${parsedURL.href}
-  url.origin....: ${parsedURL.origin}
-  url.password..: ${parsedURL.password}
-  url.pathname..: ${parsedURL.pathname}
-  url.port......: ${parsedURL.port}
-  url.protocol..: ${parsedURL.protocol}
-  url.search....: ${parsedURL.search}
-  url.username..: ${parsedURL.username}
-  url.toString(): ${parsedURL.toString()}\n`);
+  parsedURL.hash......: ${parsedURL.hash}
+  parsedURL.host......: ${parsedURL.host}
+  parsedURL.hostname..: ${parsedURL.hostname}
+  parsedURL.href......: ${parsedURL.href}
+  parsedURL.origin....: ${parsedURL.origin}
+  parsedURL.password..: ${parsedURL.password}
+  parsedURL.pathname..: ${parsedURL.pathname}
+  parsedURL.port......: ${parsedURL.port}
+  parsedURL.protocol..: ${parsedURL.protocol}
+  parsedURL.search....: ${parsedURL.search}
+  parsedURL.username..: ${parsedURL.username}
+  parsedURL.toString(): ${parsedURL.toString()}\n`);
 
   // res.end(`Hello, your URL was: ${parsedURL.toString()}\n`);
   res.end(parsedResponse);
